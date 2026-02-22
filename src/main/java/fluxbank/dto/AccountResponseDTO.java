@@ -1,4 +1,9 @@
 package fluxbank.dto;
 
-public record AccountResponseDTO() {
-}
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record AccountResponseDTO(
+        UUID accountId,
+        BigDecimal balance
+) {}

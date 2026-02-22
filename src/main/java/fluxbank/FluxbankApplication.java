@@ -1,13 +1,12 @@
-package FluxBank;
+package fluxbank;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FluxbankApiApplication {
+public class FluxbankApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FluxbankApiApplication.class, args);
+        SpringApplication.run(FluxbankApplication.class, args);
     }
-
 }

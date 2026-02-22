@@ -1,7 +1,7 @@
 package fluxbank.exception;
 
-public class InvalidAmounttExcepition extends RuntimeException {
-  public InvalidAmounttExcepition(String message) {
-    super(message);
-  }
+public class InvalidAmountException extends RuntimeException {
+    public InvalidAmountException(String message) {
+        super(message);
+    }
 }

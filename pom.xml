@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>io.github.Lucasfcz</groupId>
-    <artifactId>FluxbankAPI</artifactId>
+    <artifactId>fluxbank</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>FluxbankAPI</name>
     <description>FluxbankAPI</description>
