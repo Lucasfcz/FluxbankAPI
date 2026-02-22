@@ -1,9 +1,9 @@
-package fluxbank.service;
+package io.github.Lucasfcz.fluxbank.service;
 
-import fluxbank.domain.model.Account;
-import fluxbank.exception.IdNotFoundException;
-import fluxbank.exception.SameAccountException;
-import fluxbank.repository.AccountRepository;
+import io.github.Lucasfcz.fluxbank.domain.model.Account;
+import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
+import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
+import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

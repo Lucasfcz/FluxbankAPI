@@ -1,4 +1,4 @@
-package fluxbank.dto;
+package io.github.Lucasfcz.fluxbank.dto;
 
 import java.math.BigDecimal;
 import java.util.UUID;

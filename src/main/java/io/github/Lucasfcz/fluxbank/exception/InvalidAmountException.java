@@ -1,4 +1,4 @@
-package fluxbank.exception;
+package io.github.Lucasfcz.fluxbank.exception;
 
 public class InvalidAmountException extends RuntimeException {
     public InvalidAmountException(String message) {

@@ -1,6 +1,6 @@
-package fluxbank.repository;
+package io.github.Lucasfcz.fluxbank.repository;
 
-import fluxbank.domain.model.Account;
+import io.github.Lucasfcz.fluxbank.domain.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package fluxbank.domain.model;
+package io.github.Lucasfcz.fluxbank.domain.model;
 
 public enum AccountType {
     CHECKING,

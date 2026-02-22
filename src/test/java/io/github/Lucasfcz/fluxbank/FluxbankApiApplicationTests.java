@@ -1,4 +1,4 @@
-package fluxbank;
+package io.github.Lucasfcz.fluxbank;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,7 +1,7 @@
-package fluxbank.domain.model;
+package io.github.Lucasfcz.fluxbank.domain.model;
 
-import fluxbank.exception.InsufficientBalanceException;
-import fluxbank.exception.InvalidAmountException;
+import io.github.Lucasfcz.fluxbank.exception.InsufficientBalanceException;
+import io.github.Lucasfcz.fluxbank.exception.InvalidAmountException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

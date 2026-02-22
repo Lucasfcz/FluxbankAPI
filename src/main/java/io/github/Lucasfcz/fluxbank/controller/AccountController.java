@@ -1,10 +1,10 @@
-package fluxbank.controller;
+package io.github.Lucasfcz.fluxbank.controller;
 
-import fluxbank.domain.model.Account;
-import fluxbank.dto.AccountRequestDTO;
-import fluxbank.dto.AccountResponseDTO;
-import fluxbank.dto.TransferRequestDTO;
-import fluxbank.service.AccountService;
+import io.github.Lucasfcz.fluxbank.domain.model.Account;
+import io.github.Lucasfcz.fluxbank.dto.AccountRequestDTO;
+import io.github.Lucasfcz.fluxbank.dto.AccountResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.TransferRequestDTO;
+import io.github.Lucasfcz.fluxbank.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

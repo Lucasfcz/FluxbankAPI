@@ -1,4 +1,4 @@
-package fluxbank;
+package io.github.Lucasfcz.fluxbank;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

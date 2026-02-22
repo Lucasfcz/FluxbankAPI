@@ -1,4 +1,4 @@
-package fluxbank.dto;
+package io.github.Lucasfcz.fluxbank.dto;
 
 import java.time.LocalDateTime;
 
