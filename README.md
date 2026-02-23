@@ -1,175 +1,257 @@
-﻿# FluxbankAPI
+💳 FluxbankAPI
 
-API REST para operacoes bancarias basicas com contas pre-cadastradas:
-- deposito
-- saque
-- transferencia
+API REST para gerenciamento de contas bancárias, permitindo criação de contas, depósitos, saques e transferências entre contas.
 
-O projeto foi construido com Spring Boot, JPA/Hibernate, Flyway e PostgreSQL.
+O projeto foi desenvolvido com foco em boas práticas de arquitetura, regras de negócio bem definidas, tratamento de erros consistente e testes automatizados, simulando um cenário real de sistema bancário.
 
-## Stack
+🚀 Tecnologias utilizadas
 
-- Java 25
-- Spring Boot 4.0.3
-- Spring Web MVC
-- Spring Data JPA
-- Flyway
-- PostgreSQL
-- Maven Wrapper (`mvnw` / `mvnw.cmd`)
+Java 25
 
-## Pre-requisitos
+Spring Boot 4.0.3
 
-- JDK 25 instalado
-- PostgreSQL em execucao
-- Banco `fluxbank` criado localmente (ou ajuste a URL no `application.properties`)
+Spring Web MVC
 
-## Configuracao
+Spring Data JPA (Hibernate)
 
-A aplicacao usa estas propriedades em `src/main/resources/application.properties`:
+PostgreSQL
 
-- `spring.datasource.url=jdbc:postgresql://localhost:5432/fluxbank`
-- `spring.datasource.username=${DB_USERNAME:}`
-- `spring.datasource.password=${DB_PASSWORD:}`
+Flyway
 
-Defina usuario e senha via variaveis de ambiente antes de subir a API.
+JUnit 5
 
-### PowerShell (Windows)
+Mockito
 
-```powershell
-$env:DB_USERNAME="seu_usuario"
-$env:DB_PASSWORD="sua_senha"
-```
+MockMvc
 
-## Como executar
+Maven Wrapper
 
-### 1) Subir a aplicacao
+🧱 Arquitetura
 
-```powershell
-.\mvnw.cmd spring-boot:run
-```
+O projeto segue uma arquitetura em camadas bem definidas:
 
-Por padrao, a API sobe em `http://localhost:8080`.
+Controller → Service → Repository → Database
+📌 Responsabilidades
 
-### 2) Rodar testes
+Controller
 
-```powershell
-.\mvnw.cmd test
-```
+Recebe e valida requisições HTTP
 
-## Migracao e schema
+Converte dados de entrada/saída usando DTOs
 
-O Flyway executa automaticamente a migracao:
+Service
 
-- `src/main/resources/db/migration/V1__create_accounts_table.sql`
+Contém as regras de negócio
 
-Tabela criada:
-- `tb_accounts` (`id`, `holder_name`, `cpf`, `email`, `balance`, `account_type`, `created_at`)
+Controla transações
 
-## Endpoints
+Domain (Entity)
 
-Base path: `/accounts`
+Entidades ricas com lógica encapsulada
 
-### POST `/accounts/deposit`
+Repository
 
-Deposito em conta existente.
+Acesso ao banco de dados
 
-Request:
+DTOs
 
-```json
-{
-  "accountId": "11111111-1111-1111-1111-111111111111",
-  "amount": 150.00
-}
-```
+Contrato da API (request/response)
 
-Response `200`:
+GlobalExceptionHandler
 
-```json
-{
-  "id": "11111111-1111-1111-1111-111111111111",
-  "balance": 1150.00
-}
-```
+Tratamento centralizado de erros
 
-### POST `/accounts/withdraw`
+📦 Funcionalidades
+✔ Criar conta
 
-Saque em conta existente.
+CPF e e-mail únicos
 
-Request:
+Tipo de conta obrigatório
 
-```json
-{
-  "accountId": "11111111-1111-1111-1111-111111111111",
-  "amount": 50.00
-}
-```
+Saldo inicial padrão: 0
 
-Response `200`:
+Geração automática de UUID
 
-```json
-{
-  "id": "11111111-1111-1111-1111-111111111111",
-  "balance": 1100.00
-}
-```
+✔ Depósito
 
-### POST `/accounts/transfer`
+Valor deve ser maior que zero
 
-Transferencia entre duas contas existentes.
+Conta deve existir
+
+✔ Saque
+
+Valor deve ser maior que zero
+
+Saldo não pode ficar negativo
+
+✔ Transferência
+
+Não permite transferência para a mesma conta
+
+Valida contas de origem e destino
+
+Operação transacional
+
+🔌 Endpoints
+🔹 Criar conta
+
+POST /accounts/create
 
 Request:
 
-```json
 {
-  "fromId": "11111111-1111-1111-1111-111111111111",
-  "toId": "22222222-2222-2222-2222-222222222222",
-  "amount": 100.00
+  "holderName": "Lucas Cabral",
+  "cpf": "12345678900",
+  "email": "lucas@email.com",
+  "accountType": "CHECKING"
 }
-```
 
-Response `200`:
+Response 201 Created:
 
-```text
+{
+  "accountId": "uuid",
+  "balance": 0
+}
+🔹 Depositar
+
+POST /accounts/deposit
+
+Request:
+
+{
+  "accountId": "uuid",
+  "amount": 100
+}
+
+Response 200 OK:
+
+{
+  "accountId": "uuid",
+  "balance": 100
+}
+🔹 Sacar
+
+POST /accounts/withdraw
+
+Request:
+
+{
+  "accountId": "uuid",
+  "amount": 50
+}
+
+Response 200 OK:
+
+{
+  "accountId": "uuid",
+  "balance": 50
+}
+🔹 Transferir
+
+POST /accounts/transfer
+
+Request:
+
+{
+  "fromId": "uuid",
+  "toId": "uuid",
+  "amount": 25
+}
+
+Response 200 OK:
+
 Transfer successful
-```
+⚠️ Tratamento de erros
 
-## Exemplos com curl
+A API utiliza um GlobalExceptionHandler para padronizar as respostas de erro.
 
-```bash
-curl -X POST http://localhost:8080/accounts/deposit \
-  -H "Content-Type: application/json" \
-  -d "{\"accountId\":\"11111111-1111-1111-1111-111111111111\",\"amount\":150.00}"
-```
+Formato padrão:
 
-```bash
-curl -X POST http://localhost:8080/accounts/withdraw \
-  -H "Content-Type: application/json" \
-  -d "{\"accountId\":\"11111111-1111-1111-1111-111111111111\",\"amount\":50.00}"
-```
-
-```bash
-curl -X POST http://localhost:8080/accounts/transfer \
-  -H "Content-Type: application/json" \
-  -d "{\"fromId\":\"11111111-1111-1111-1111-111111111111\",\"toId\":\"22222222-2222-2222-2222-222222222222\",\"amount\":100.00}"
-```
-
-## Tratamento de erros
-
-A API retorna erros no formato:
-
-```json
 {
   "timestamp": "2026-02-22T10:00:00",
-  "message": "mensagem de erro"
+  "message": "Mensagem de erro"
 }
-```
-
 Casos tratados:
-- `404 Not Found`: conta de origem/destino inexistente
-- `400 Bad Request`: valor invalido, saldo insuficiente, transferencia para a mesma conta
 
-## Observacoes importantes
+400 Bad Request
 
-- No estado atual, nao ha endpoint para criar conta.
-- Para testar depositos/saques/transferencias, insira contas diretamente no banco (`tb_accounts`) antes.
-- Tipos de conta disponiveis: `CHECKING`, `SAVINGS`, `BUSINESS`, `INVESTMENT`, `DIGITAL_WALLET`.
+Valor inválido
+
+Saldo insuficiente
+
+Transferência para a mesma conta
+
+Payload inválido
+
+404 Not Found
+
+Conta não encontrada
+
+🗄 Banco de dados
+
+PostgreSQL
+
+Controle de versão do schema com Flyway
+
+Hibernate configurado com:
+
+spring.jpa.hibernate.ddl-auto=validate
+Migração inicial:
+src/main/resources/db/migration/V1__create_accounts_table.sql
+
+Tabela criada:
+
+tb_accounts (
+  id,
+  holder_name,
+  cpf,
+  email,
+  balance,
+  account_type,
+  created_at
+)
+🧪 Testes
+
+O projeto possui:
+
+Testes unitários de Service (Mockito)
+
+Testes de Controller com MockMvc
+
+Testes de validação e exceções
+
+Testes sem dependência do banco (rápidos e isolados)
+
+Executar testes:
+./mvnw test
+▶ Como executar o projeto
+1️⃣ Criar banco de dados
+CREATE DATABASE fluxbank;
+2️⃣ Configurar variáveis de ambiente
+
+Windows (PowerShell):
+
+$env:DB_USERNAME="seu_usuario"
+$env:DB_PASSWORD="sua_senha"
+3️⃣ Subir a aplicação
+./mvnw spring-boot:run
+
+A API ficará disponível em:
+
+http://localhost:8080
+📈 Próximas melhorias planejadas
+
+Swagger / OpenAPI
+
+Dockerização da aplicação
+
+Testcontainers para testes de integração
+
+Histórico de transações
+
+Autenticação com Spring Security
+
+👨‍💻 Autor
+
+Lucas Cabral
+Desenvolvedor Backend Java
