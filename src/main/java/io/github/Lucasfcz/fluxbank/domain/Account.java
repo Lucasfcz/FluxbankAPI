@@ -1,4 +1,4 @@
-package io.github.Lucasfcz.fluxbank.domain.model;
+package io.github.Lucasfcz.fluxbank.domain;
 
 import io.github.Lucasfcz.fluxbank.exception.InsufficientBalanceException;
 import io.github.Lucasfcz.fluxbank.exception.InvalidAmountException;

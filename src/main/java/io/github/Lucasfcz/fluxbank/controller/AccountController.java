@@ -1,10 +1,12 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
-import io.github.Lucasfcz.fluxbank.domain.model.Account;
+import io.github.Lucasfcz.fluxbank.domain.Account;
 import io.github.Lucasfcz.fluxbank.dto.AccountRequestDTO;
 import io.github.Lucasfcz.fluxbank.dto.AccountResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.CreateAccountRequestDTO;
 import io.github.Lucasfcz.fluxbank.dto.TransferRequestDTO;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
 
     private final AccountService service;
+
+    @PostMapping("/create")
+    public ResponseEntity<AccountResponseDTO> createAccount(
+            @RequestBody @Valid CreateAccountRequestDTO request
+    ) {
+        Account account = service.createAccount(
+                request.holderName(),
+                request.cpf(),
+                request.email(),
+                request.accountType()
+        );
+
+        AccountResponseDTO response = new AccountResponseDTO(
+                account.getId(),
+                account.getBalance()
+        );
+
+        return ResponseEntity.status(201).body(response);
+    }
 
     @PostMapping("/deposit") // POST porque altera os dados
     public ResponseEntity<AccountResponseDTO> deposit(@RequestBody AccountRequestDTO request) {

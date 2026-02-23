@@ -1,6 +1,7 @@
 package io.github.Lucasfcz.fluxbank.service;
 
-import io.github.Lucasfcz.fluxbank.domain.model.Account;
+import io.github.Lucasfcz.fluxbank.domain.Account;
+import io.github.Lucasfcz.fluxbank.domain.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
@@ -17,11 +18,18 @@ public class AccountService {
     private final AccountRepository repository;
 
     @Transactional
+    public Account createAccount(String holderName, String cpf, String email, AccountType accountType) {
+
+        Account account = new Account(holderName, cpf, email, accountType);
+
+        return repository.save(account);
+    }
+
+    @Transactional
     public Account deposit(UUID accountId, BigDecimal amount) {
         Account account = repository.findById(accountId)
                 .orElseThrow(() -> new IdNotFoundException("Account Id not found"));
         account.deposit(amount);
-        repository.save(account);
 
         return account;
     }
@@ -31,7 +39,6 @@ public class AccountService {
         Account account = repository.findById(accountId)
                 .orElseThrow(() -> new IdNotFoundException("Account Id not found"));
         account.withdraw(amount);
-        repository.save(account);
 
         return account;
     }
@@ -52,7 +59,5 @@ public class AccountService {
         fromAccount.withdraw(amount);
         toAccount.deposit(amount);
 
-        repository.save(fromAccount);
-        repository.save(toAccount);
     }
 }
