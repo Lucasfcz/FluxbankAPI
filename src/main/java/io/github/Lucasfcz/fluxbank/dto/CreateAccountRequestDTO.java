@@ -8,15 +8,15 @@ import jakarta.validation.constraints.NotNull;
 public record CreateAccountRequestDTO(
 
         @NotBlank
-        String holderName,
+        String holderName, // Legal name of the account holder.
 
         @NotBlank
-        String cpf,
+        String cpf, // Brazilian individual taxpayer registry id.
 
         @Email
         @NotBlank
-        String email,
+        String email, // Unique contact email for the account.
 
         @NotNull
-        AccountType accountType
+        AccountType accountType // Product type selected for the account.
 ) {}

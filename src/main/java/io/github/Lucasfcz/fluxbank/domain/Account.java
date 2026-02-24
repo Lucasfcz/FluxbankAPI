@@ -31,6 +31,9 @@ public class Account {
     private AccountType accountType;
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     public void deposit(BigDecimal amount){
         validateAmount(amount);
@@ -43,17 +46,20 @@ public class Account {
         this.balance = this.balance.subtract(amount);
     }
 
+    // Shared validation for deposit and withdrawal operations.
     private void validateAmount(BigDecimal amount){
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero");
         }
     }
+
+    // Domain rule: withdrawals cannot exceed available balance.
     private void validateSufficientBalance(BigDecimal amount){
         if (this.balance.compareTo(amount) < 0){
             throw new InsufficientBalanceException("The amount must be less than balance");
         }
     }
-
+    // Constructor
     public Account(String holderName, String cpf, String email, AccountType accountType) {
         this.id = UUID.randomUUID();
         this.holderName = holderName;
@@ -62,5 +68,6 @@ public class Account {
         this.accountType = accountType;
         this.balance = BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
+        this.version = 0L;
     }
 }

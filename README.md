@@ -1,83 +1,94 @@
-﻿# FluxbankAPI
+# Fluxbank API
 
-API REST para operacoes bancarias basicas com contas pre-cadastradas:
-- deposito
-- saque
-- transferencia
+API REST para simulacao de operacoes bancarias basicas, desenvolvida com Spring Boot, com foco em arquitetura em camadas, validacao, transacoes e testes automatizados.
 
-O projeto foi construido com Spring Boot, JPA/Hibernate, Flyway e PostgreSQL.
+## Funcionalidades
 
-## Stack
+- Criacao de conta bancaria
+- Deposito
+- Saque
+- Transferencia entre contas
+- Validacoes de regra de negocio
+- Tratamento global de excecoes
+- Migracoes de banco com Flyway
+- Testes unitarios de service, controller e dominio
+
+## Stack Tecnologica
 
 - Java 25
 - Spring Boot 4.0.3
 - Spring Web MVC
-- Spring Data JPA
+- Spring Data JPA (Hibernate)
 - Flyway
 - PostgreSQL
 - Maven Wrapper (`mvnw` / `mvnw.cmd`)
+- JUnit 5
+- Mockito
+- MockMvc
 
-## Pre-requisitos
+## Arquitetura
 
-- JDK 25 instalado
-- PostgreSQL em execucao
-- Banco `fluxbank` criado localmente (ou ajuste a URL no `application.properties`)
+- `controller`: recebe requests HTTP e retorna responses
+- `service`: regras de negocio e transacoes
+- `domain`: entidades e enums
+- `repository`: acesso ao banco (JPA)
+- `dto`: contratos de entrada e saida da API
+- `exception`: excecoes customizadas e handler global
 
-## Configuracao
+## Modelo de Conta (`tb_accounts`)
 
-A aplicacao usa estas propriedades em `src/main/resources/application.properties`:
+Campos principais:
 
-- `spring.datasource.url=jdbc:postgresql://localhost:5432/fluxbank`
-- `spring.datasource.username=${DB_USERNAME:}`
-- `spring.datasource.password=${DB_PASSWORD:}`
+- `id` (UUID)
+- `holder_name`
+- `cpf` (unico)
+- `email` (unico)
+- `balance`
+- `account_type`
+- `created_at`
+- `version`
 
-Defina usuario e senha via variaveis de ambiente antes de subir a API.
+Tipos de conta:
 
-### PowerShell (Windows)
-
-```powershell
-$env:DB_USERNAME="seu_usuario"
-$env:DB_PASSWORD="sua_senha"
-```
-
-## Como executar
-
-### 1) Subir a aplicacao
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-Por padrao, a API sobe em `http://localhost:8080`.
-
-### 2) Rodar testes
-
-```powershell
-.\mvnw.cmd test
-```
-
-## Migracao e schema
-
-O Flyway executa automaticamente a migracao:
-
-- `src/main/resources/db/migration/V1__create_accounts_table.sql`
-
-Tabela criada:
-- `tb_accounts` (`id`, `holder_name`, `cpf`, `email`, `balance`, `account_type`, `created_at`)
+- `CHECKING`
+- `SAVINGS`
+- `BUSINESS`
+- `INVESTMENT`
+- `DIGITAL_WALLET`
 
 ## Endpoints
 
 Base path: `/accounts`
 
-### POST `/accounts/deposit`
-
-Deposito em conta existente.
+### POST `/accounts/create`
 
 Request:
 
 ```json
 {
-  "accountId": "11111111-1111-1111-1111-111111111111",
+  "holderName": "Lucas Cabral",
+  "cpf": "12345678900",
+  "email": "lucas@email.com",
+  "accountType": "CHECKING"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "accountId": "uuid",
+  "balance": 0
+}
+```
+
+### POST `/accounts/deposit`
+
+Request:
+
+```json
+{
+  "accountId": "uuid",
   "amount": 150.00
 }
 ```
@@ -86,20 +97,18 @@ Response `200`:
 
 ```json
 {
-  "id": "11111111-1111-1111-1111-111111111111",
-  "balance": 1150.00
+  "accountId": "uuid",
+  "balance": 150.00
 }
 ```
 
 ### POST `/accounts/withdraw`
 
-Saque em conta existente.
-
 Request:
 
 ```json
 {
-  "accountId": "11111111-1111-1111-1111-111111111111",
+  "accountId": "uuid",
   "amount": 50.00
 }
 ```
@@ -108,21 +117,19 @@ Response `200`:
 
 ```json
 {
-  "id": "11111111-1111-1111-1111-111111111111",
-  "balance": 1100.00
+  "accountId": "uuid",
+  "balance": 100.00
 }
 ```
 
 ### POST `/accounts/transfer`
 
-Transferencia entre duas contas existentes.
-
 Request:
 
 ```json
 {
-  "fromId": "11111111-1111-1111-1111-111111111111",
-  "toId": "22222222-2222-2222-2222-222222222222",
+  "fromId": "uuid",
+  "toId": "uuid",
   "amount": 100.00
 }
 ```
@@ -133,43 +140,69 @@ Response `200`:
 Transfer successful
 ```
 
-## Exemplos com curl
+## Tratamento de Erros
 
-```bash
-curl -X POST http://localhost:8080/accounts/deposit \
-  -H "Content-Type: application/json" \
-  -d "{\"accountId\":\"11111111-1111-1111-1111-111111111111\",\"amount\":150.00}"
-```
-
-```bash
-curl -X POST http://localhost:8080/accounts/withdraw \
-  -H "Content-Type: application/json" \
-  -d "{\"accountId\":\"11111111-1111-1111-1111-111111111111\",\"amount\":50.00}"
-```
-
-```bash
-curl -X POST http://localhost:8080/accounts/transfer \
-  -H "Content-Type: application/json" \
-  -d "{\"fromId\":\"11111111-1111-1111-1111-111111111111\",\"toId\":\"22222222-2222-2222-2222-222222222222\",\"amount\":100.00}"
-```
-
-## Tratamento de erros
-
-A API retorna erros no formato:
+Formato padrao:
 
 ```json
 {
   "timestamp": "2026-02-22T10:00:00",
-  "message": "mensagem de erro"
+  "message": "error message"
 }
 ```
 
 Casos tratados:
-- `404 Not Found`: conta de origem/destino inexistente
-- `400 Bad Request`: valor invalido, saldo insuficiente, transferencia para a mesma conta
 
-## Observacoes importantes
+- `404 Not Found`: conta inexistente
+- `400 Bad Request`: transferencia para mesma conta, saldo insuficiente, valor invalido, payload invalido
+- `409 Conflict`: CPF/email ja cadastrados, conflito de atualizacao concorrente
 
-- No estado atual, nao ha endpoint para criar conta.
-- Para testar depositos/saques/transferencias, insira contas diretamente no banco (`tb_accounts`) antes.
-- Tipos de conta disponiveis: `CHECKING`, `SAVINGS`, `BUSINESS`, `INVESTMENT`, `DIGITAL_WALLET`.
+## Banco de Dados e Flyway
+
+Migracoes em:
+
+- `src/main/resources/db/migration/V1__create_accounts_table.sql`
+- `src/main/resources/db/migration/V2__add_version_column_to_accounts.sql`
+
+## Configuracao
+
+Arquivo: `src/main/resources/application.properties`
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/fluxbank
+spring.datasource.username=${DB_USERNAME:}
+spring.datasource.password=${DB_PASSWORD:}
+```
+
+### Variaveis de ambiente (PowerShell)
+
+```powershell
+$env:DB_USERNAME="seu_usuario"
+$env:DB_PASSWORD="sua_senha"
+```
+
+## Como Executar
+
+Subir a aplicacao:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+API disponivel em `http://localhost:8080`.
+
+Rodar testes:
+
+```powershell
+.\mvnw.cmd "-Dtest=AccountControllerTest,AccountServiceTest,AccountTest" test
+```
+
+## Objetivo do Projeto
+
+Projeto desenvolvido para consolidar fundamentos de backend Java com Spring Boot, aplicando regras de negocio reais, validacoes e testes automatizados.
+
+## Autor
+
+Lucas Cabral  
+Estudante de ADS | Backend Java  
+IFPE - Paulista

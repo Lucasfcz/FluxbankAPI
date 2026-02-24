@@ -2,6 +2,8 @@ package io.github.Lucasfcz.fluxbank.domain.model;
 
 import io.github.Lucasfcz.fluxbank.domain.Account;
 import io.github.Lucasfcz.fluxbank.domain.AccountType;
+import io.github.Lucasfcz.fluxbank.exception.InsufficientBalanceException;
+import io.github.Lucasfcz.fluxbank.exception.InvalidAmountException;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +34,7 @@ public class AccountTest {
                 AccountType.CHECKING
         );
 
-        assertThrows(RuntimeException.class, () ->
+        assertThrows(InvalidAmountException.class, () ->
                 account.deposit(BigDecimal.ZERO)
         );
     }
@@ -60,7 +62,7 @@ public class AccountTest {
                 AccountType.CHECKING
         );
 
-        assertThrows(RuntimeException.class, () ->
+        assertThrows(InsufficientBalanceException.class, () ->
                 account.withdraw(BigDecimal.valueOf(50))
         );
     }

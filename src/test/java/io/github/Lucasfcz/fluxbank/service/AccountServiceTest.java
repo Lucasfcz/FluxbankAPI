@@ -4,6 +4,7 @@ package io.github.Lucasfcz.fluxbank.service;
 import io.github.Lucasfcz.fluxbank.domain.Account;
 import io.github.Lucasfcz.fluxbank.domain.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
+import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +53,8 @@ class AccountServiceTest {
 
     @Test
     void shouldCreateAccountSuccessfully() {
+        when(repository.findByCpf("12345678900")).thenReturn(Optional.empty());
+        when(repository.findByEmail("lucas@email.com")).thenReturn(Optional.empty());
         when(repository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Account result = service.createAccount(
@@ -69,6 +72,35 @@ class AccountServiceTest {
         assertEquals(BigDecimal.ZERO, result.getBalance());
 
         verify(repository).save(any(Account.class));
+    }
+
+    @Test
+    void shouldThrowWhenCpfAlreadyExists() {
+        when(repository.findByCpf("12345678900")).thenReturn(Optional.of(sourceAccount));
+
+        assertThrows(ResourceConflictException.class, () -> service.createAccount(
+                "Lucas Cabral",
+                "12345678900",
+                "new@email.com",
+                AccountType.CHECKING
+        ));
+        verify(repository).findByCpf("12345678900");
+        verify(repository, never()).save(any(Account.class));
+    }
+
+    @Test
+    void shouldThrowWhenEmailAlreadyExists() {
+        when(repository.findByCpf("12345678900")).thenReturn(Optional.empty());
+        when(repository.findByEmail("lucas@email.com")).thenReturn(Optional.of(sourceAccount));
+
+        assertThrows(ResourceConflictException.class, () -> service.createAccount(
+                "Lucas Cabral",
+                "12345678900",
+                "lucas@email.com",
+                AccountType.CHECKING
+        ));
+        verify(repository).findByEmail("lucas@email.com");
+        verify(repository, never()).save(any(Account.class));
     }
 
     @Test

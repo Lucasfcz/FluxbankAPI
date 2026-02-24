@@ -9,6 +9,9 @@ import java.util.UUID;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, UUID> {
+    // Lookup used to enforce or validate unique cpf constraints in business flows.
     Optional<Account> findByCpf(String cpf);
+
+    // Lookup used to enforce or validate unique email constraints in business flows.
     Optional<Account> findByEmail(String email);
 }

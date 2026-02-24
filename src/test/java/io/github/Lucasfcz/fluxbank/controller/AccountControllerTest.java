@@ -4,6 +4,7 @@ import io.github.Lucasfcz.fluxbank.domain.Account;
 import io.github.Lucasfcz.fluxbank.domain.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.GlobalExceptionHandler;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
+import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,6 +106,27 @@ class AccountControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void shouldReturn409WhenCreateAccountCpfAlreadyExists() throws Exception {
+        when(service.createAccount(any(), any(), any(), any()))
+                .thenThrow(new ResourceConflictException("CPF is already registered"));
+
+        String requestBody = """
+                {
+                  "holderName": "Lucas Cabral",
+                  "cpf": "12345678900",
+                  "email": "lucas@email.com",
+                  "accountType": "CHECKING"
+                }
+                """;
+
+        mockMvc.perform(post("/accounts/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("CPF is already registered"));
+    }
+
     // ========================= DEPOSIT =========================
 
     @Test
@@ -158,6 +180,21 @@ class AccountControllerTest {
                         .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Account Id not found"));
+    }
+
+    @Test
+    void shouldReturn400WhenDepositPayloadIsInvalid() throws Exception {
+        String body = """
+                {
+                  "accountId": null,
+                  "amount": 0
+                }
+                """;
+
+        mockMvc.perform(post("/accounts/deposit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
     }
 
     // ========================= TRANSFER =========================
