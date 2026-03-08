@@ -7,12 +7,15 @@ import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
+import io.github.Lucasfcz.fluxbank.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +28,9 @@ class AccountServiceTest {
 
     @Mock
     private AccountRepository repository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
 
     @InjectMocks
     private AccountService service;
@@ -47,6 +53,9 @@ class AccountServiceTest {
                 "maria@email.com",
                 AccountType.SAVINGS
         );
+
+        ReflectionTestUtils.setField(sourceAccount, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(destinationAccount, "id", UUID.randomUUID());
 
         sourceAccount.deposit(BigDecimal.valueOf(200));
     }

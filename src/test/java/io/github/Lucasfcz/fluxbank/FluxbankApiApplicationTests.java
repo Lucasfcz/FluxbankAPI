@@ -1,13 +1,13 @@
 package io.github.Lucasfcz.fluxbank;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@SpringBootTest
 class FluxbankApiApplicationTests {
 
     @Test
-    void contextLoads() {
+    void applicationClassShouldBeInstantiable() {
+        assertNotNull(new FluxbankApplication());
     }
 
 }

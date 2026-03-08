@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.math.BigDecimal;
@@ -59,6 +60,7 @@ class AccountControllerTest {
                 "lucas@email.com",
                 AccountType.CHECKING
         );
+        ReflectionTestUtils.setField(account, "id", UUID.randomUUID());
 
         when(service.createAccount(
                 any(), any(), any(), any()
@@ -137,6 +139,7 @@ class AccountControllerTest {
                 "lucas@email.com",
                 AccountType.CHECKING
         );
+        ReflectionTestUtils.setField(account, "id", UUID.randomUUID());
 
         UUID accountId = account.getId();
         account.deposit(BigDecimal.valueOf(100));

@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Account {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false)
     private UUID id;
 
@@ -25,7 +26,7 @@ public class Account {
     @Column(nullable = false,unique = true)
     private String email;
     @Column(nullable = false)
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountType accountType;
@@ -61,12 +62,10 @@ public class Account {
     }
     // Constructor
     public Account(String holderName, String cpf, String email, AccountType accountType) {
-        this.id = UUID.randomUUID();
         this.holderName = holderName;
         this.cpf = cpf;
         this.email = email;
         this.accountType = accountType;
-        this.balance = BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
         this.version = 0L;
     }

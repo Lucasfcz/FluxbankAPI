@@ -2,12 +2,17 @@ package io.github.Lucasfcz.fluxbank.service;
 
 import io.github.Lucasfcz.fluxbank.domain.Account;
 import io.github.Lucasfcz.fluxbank.domain.AccountType;
+import io.github.Lucasfcz.fluxbank.domain.Transaction;
+import io.github.Lucasfcz.fluxbank.domain.TransactionType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
+import io.github.Lucasfcz.fluxbank.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -17,6 +22,7 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository repository;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public Account createAccount(String holderName, String cpf, String email, AccountType accountType) {
@@ -39,6 +45,7 @@ public class AccountService {
         Account account = repository.findById(accountId)
                 .orElseThrow(() -> new IdNotFoundException("Account Id not found"));
         account.deposit(amount);
+        transactionRepository.save(new Transaction(account, account, amount, TransactionType.DEPOSIT));
 
         // Dirty checking persists balance changes at transaction commit.
         return account;
@@ -50,6 +57,7 @@ public class AccountService {
         Account account = repository.findById(accountId)
                 .orElseThrow(() -> new IdNotFoundException("Account Id not found"));
         account.withdraw(amount);
+        transactionRepository.save(new Transaction(account, account, amount, TransactionType.WITHDRAW));
 
         // Dirty checking persists balance changes at transaction commit.
         return account;
@@ -72,6 +80,19 @@ public class AccountService {
         // Keep the operation atomic: either both updates succeed or both rollback.
         fromAccount.withdraw(amount);
         toAccount.deposit(amount);
+        transactionRepository.save(new Transaction(fromAccount, toAccount, amount, TransactionType.TRANSFER));
 
+    }
+
+    @Transactional
+    public Page<Transaction> getAccountTransactions(UUID accountId, Pageable pageable) {
+        if (!repository.existsById(accountId)) {
+            throw new IdNotFoundException("Account Id not found");
+        }
+        return transactionRepository.findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
+                accountId,
+                accountId,
+                pageable
+        );
     }
 }
