@@ -1,6 +1,6 @@
 package io.github.Lucasfcz.fluxbank.repository;
 
-import io.github.Lucasfcz.fluxbank.domain.Account;
+import io.github.Lucasfcz.fluxbank.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +14,5 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     // Lookup used to enforce or validate unique email constraints in business flows.
     Optional<Account> findByEmail(String email);
+
 }

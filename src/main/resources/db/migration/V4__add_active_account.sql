@@ -1,0 +1,2 @@
+ALTER table tb_accounts
+ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;

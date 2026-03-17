@@ -1,5 +1,6 @@
-package io.github.Lucasfcz.fluxbank.domain;
+package io.github.Lucasfcz.fluxbank.model;
 
+import io.github.Lucasfcz.fluxbank.enums.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,12 +30,12 @@ public class Transaction {
     @Column(nullable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "from_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_account_id")
     private Account fromAccount;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "to_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_account_id")
     private Account toAccount;
 
     @Column(nullable = false, precision = 19, scale = 2)

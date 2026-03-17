@@ -1,4 +1,4 @@
-package io.github.Lucasfcz.fluxbank.dto;
+package io.github.Lucasfcz.fluxbank.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

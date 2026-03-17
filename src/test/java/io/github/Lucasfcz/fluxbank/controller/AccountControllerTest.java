@@ -1,12 +1,13 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
-import io.github.Lucasfcz.fluxbank.domain.Account;
-import io.github.Lucasfcz.fluxbank.domain.AccountType;
+import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.GlobalExceptionHandler;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
+import io.github.Lucasfcz.fluxbank.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,9 @@ class AccountControllerTest {
 
     @Mock
     private AccountService service;
+
+    @Mock
+    private TransactionService transactionService;
 
     @InjectMocks
     private AccountController controller;
@@ -144,7 +148,7 @@ class AccountControllerTest {
         UUID accountId = account.getId();
         account.deposit(BigDecimal.valueOf(100));
 
-        when(service.deposit(accountId, BigDecimal.valueOf(100)))
+        when(transactionService.deposit(accountId, BigDecimal.valueOf(100)))
                 .thenReturn(account);
 
         String body = """
@@ -161,14 +165,14 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.balance").value(100));
 
-        verify(service).deposit(accountId, BigDecimal.valueOf(100));
+        verify(transactionService).deposit(accountId, BigDecimal.valueOf(100));
     }
 
     @Test
     void shouldReturn404WhenDepositAccountDoesNotExist() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(service.deposit(id, BigDecimal.TEN))
+        when(transactionService.deposit(id, BigDecimal.TEN))
                 .thenThrow(new IdNotFoundException("Account Id not found"));
 
         String body = """
@@ -221,7 +225,7 @@ class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Transfer successful"));
 
-        verify(service).transfer(from, to, BigDecimal.valueOf(25));
+        verify(transactionService).transfer(from, to, BigDecimal.valueOf(25));
     }
 
     @Test
@@ -229,7 +233,7 @@ class AccountControllerTest {
         UUID sameId = UUID.randomUUID();
 
         doThrow(new SameAccountException("Cannot transfer to the same account"))
-                .when(service).transfer(sameId, sameId, BigDecimal.valueOf(30));
+                .when(transactionService).transfer(sameId, sameId, BigDecimal.valueOf(30));
 
         String body = """
                 {

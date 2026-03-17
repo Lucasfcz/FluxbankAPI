@@ -1,8 +1,8 @@
 package io.github.Lucasfcz.fluxbank.service;
 
 
-import io.github.Lucasfcz.fluxbank.domain.Account;
-import io.github.Lucasfcz.fluxbank.domain.AccountType;
+import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;

@@ -1,6 +1,6 @@
-package io.github.Lucasfcz.fluxbank.dto;
+package io.github.Lucasfcz.fluxbank.dto.response;
 
-import io.github.Lucasfcz.fluxbank.domain.TransactionType;
+import io.github.Lucasfcz.fluxbank.enums.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

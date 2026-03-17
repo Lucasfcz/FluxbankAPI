@@ -1,25 +1,21 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
-import io.github.Lucasfcz.fluxbank.domain.Account;
-import io.github.Lucasfcz.fluxbank.domain.Transaction;
-import io.github.Lucasfcz.fluxbank.dto.AccountRequestDTO;
-import io.github.Lucasfcz.fluxbank.dto.AccountResponseDTO;
-import io.github.Lucasfcz.fluxbank.dto.CreateAccountRequestDTO;
-import io.github.Lucasfcz.fluxbank.dto.TransactionResponseDTO;
-import io.github.Lucasfcz.fluxbank.dto.TransferRequestDTO;
+import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.Transaction;
+import io.github.Lucasfcz.fluxbank.dto.response.AccountResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.request.CreateAccountRequestDTO;
+import io.github.Lucasfcz.fluxbank.dto.response.TransactionResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.request.UpdateAccountRequestDTO;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
+import io.github.Lucasfcz.fluxbank.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,11 +25,10 @@ import java.util.UUID;
 public class AccountController {
 
     private final AccountService service;
+    private final TransactionService transactionService;
 
-    @PostMapping("/create")
-    public ResponseEntity<AccountResponseDTO> createAccount(
-            @RequestBody @Valid CreateAccountRequestDTO request
-    ) {
+    @PostMapping
+    public ResponseEntity<AccountResponseDTO> createAccount(@RequestBody @Valid CreateAccountRequestDTO request) {
         // Delegate account creation to the service layer.
         Account account = service.createAccount(
                 request.holderName(),
@@ -51,47 +46,48 @@ public class AccountController {
         return ResponseEntity.status(201).body(response);
     }
 
-    @PostMapping("/deposit") // POST is used because this endpoint changes server state.
-    public ResponseEntity<AccountResponseDTO> deposit(@RequestBody @Valid AccountRequestDTO request) {
-        // Execute deposit and return the updated balance.
-        Account account = service.deposit(request.accountId(), request.amount());
+    @GetMapping("/{accountId}")
+    public ResponseEntity<AccountResponseDTO> findById(@PathVariable UUID accountId) {
+
+        Account account = service.findById(accountId);
 
         AccountResponseDTO response = new AccountResponseDTO(
                 account.getId(),
                 account.getBalance()
         );
+
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/withdraw")
-    public ResponseEntity<AccountResponseDTO> withdraw(@RequestBody @Valid AccountRequestDTO request){
-        // Execute withdrawal and return the updated balance.
-        Account account = service.withdraw(request.accountId(),request.amount());
+    //Deactivate an account
+    @DeleteMapping("/{accountId}")
+    public ResponseEntity<Void> deactivateAccount(@PathVariable UUID accountId) {
+        service.deactivateAccount(accountId);
+        return ResponseEntity.noContent().build();
+    }
 
-        AccountResponseDTO response = new AccountResponseDTO(
-                account.getId(),
-                account.getBalance()
-        );
+    //Find all accounts
+    @GetMapping
+    public ResponseEntity<List<AccountResponseDTO>> findAll(){
+        List<Account> accounts = service.findAll();
+
+        List<AccountResponseDTO> response = accounts.stream()
+                .map(account -> new AccountResponseDTO(
+                        account.getId(),
+                        account.getBalance()
+                ))
+                .toList();
+
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/transfer") // POST is used because this endpoint changes server state.
-    public ResponseEntity<String> transfer(@RequestBody @Valid TransferRequestDTO request) {
-
-        // Perform a transactional transfer between two accounts.
-        service.transfer(request.fromId(), request.toId(), request.amount());
-
-        // Return a simple success confirmation.
-        return ResponseEntity.ok("Transfer successful");
-    }
-
+    //List account transactions
     @GetMapping("/{accountId}/transactions")
     public ResponseEntity<Page<TransactionResponseDTO>> getTransactions(
             @PathVariable UUID accountId,
             Pageable pageable
     ) {
-        Page<Transaction> transactions = service.getAccountTransactions(accountId, pageable);
-
+        Page<Transaction> transactions = transactionService.getAccountTransactions(accountId, pageable);
         Page<TransactionResponseDTO> response = transactions.map(transaction -> new TransactionResponseDTO(
                 transaction.getId(),
                 transaction.getFromAccount().getId(),
@@ -100,6 +96,27 @@ public class AccountController {
                 transaction.getType(),
                 transaction.getCreatedAt()
         ));
+
+        return ResponseEntity.ok(response);
+    }
+
+    //Upadate account information. Only non-null fields will be updated.
+    @PutMapping("/{accountId}")
+    public ResponseEntity<AccountResponseDTO> updateAccount(
+            @PathVariable UUID accountId,
+            @RequestBody @Valid UpdateAccountRequestDTO request) {
+
+        Account account = service.updateAccount(
+                accountId,
+                request.holderName(),
+                request.email(),
+                request.accountType()
+        );
+
+        AccountResponseDTO response = new AccountResponseDTO(
+                account.getId(),
+                account.getBalance()
+        );
 
         return ResponseEntity.ok(response);
     }
