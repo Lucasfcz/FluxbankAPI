@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-    // If is inactive account, maps to HTTP 409 to indicate the operation cannot proceed due to the account state.
+    // If is inactive account, maps to HTTP 403 to indicate the operation cannot proceed due to the account state.
     @ExceptionHandler(AccountInactiveException.class)
     public ResponseEntity<ErrorResponseDTO> handleAccountInactive(AccountInactiveException ex) {
 
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 ex.getMessage()
         );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})

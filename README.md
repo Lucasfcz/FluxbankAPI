@@ -1,194 +1,129 @@
-💳 Fluxbank APIAPI REST robusta para gerenciamento de contas bancárias. Focada em Clean Architecture, transações seguras e alta cobertura de testes.🚀 Quick Start1. RequisitosJava 25 + MavenPostgreSQL2. ConfiguraçãoBash# Clone o repositório
-git clone https://github.com/seu-usuario/fluxbank-api.git
-💰 Fluxbank API
+# 💳 FluxbankAPI
 
-# Defina as variáveis de ambiente
-export DB_USERNAME=seu_usuario
-export DB_PASSWORD=sua_senha
-API REST para simulação de operações bancárias básicas, desenvolvida com Spring Boot, seguindo boas práticas de arquitetura, validação, transações e testes automatizados.
+FluxbankAPI é uma API REST de simulação bancária que desenvolvi para consolidar meus conhecimentos em backend Java. O projeto cobre desde operações financeiras básicas até autenticação com JWT, Docker e testes unitários.
 
-📌 Funcionalidades
+---
 
-✔️ Criação de contas bancárias
-✔️ Depósito
-✔️ Saque
-✔️ Transferência entre contas
-✔️ Validações de regra de negócio
-✔️ Tratamento global de exceções
-✔️ Migração de banco com Flyway
-✔️ Testes unitários (Service e Controller)
+## ✨ O que a API faz?
 
-🛠️ Stack Tecnológica
-Tecnologia	Uso
-Java 25	Linguagem principal
-Spring Boot 4.0.3	Framework backend
-Spring Web MVC	API REST
-Spring Data JPA	Persistência
-Hibernate	ORM
-Flyway	Versionamento de banco
-PostgreSQL	Banco de dados
-Maven Wrapper	Build
-JUnit 5	Testes
-Mockito	Mocks
-MockMvc	Testes de controller
-🧱 Arquitetura
-controller
- └── recebe requests HTTP
-service
- └── regras de negócio e transações
-domain
- └── entidades e enums
-repository
- └── acesso ao banco (JPA)
-dto
- └── entrada e saída da API
-exception
- └── exceções customizadas + handler global
-🗃️ Modelo de Conta
-Account
- ├─ id (UUID)
- ├─ holderName
- ├─ cpf (único)
- ├─ email (único)
- ├─ balance
- ├─ accountType
- └─ createdAt
-Tipos de Conta
+Você pode criar contas bancárias, fazer depósitos, saques e transferências entre contas, consultar o histórico de transações e gerenciar os dados da conta. Tudo protegido por autenticação JWT.
 
-CHECKING
+Além disso, o sistema garante integridade dos dados com controle de concorrência otimista (via `@Version` do Hibernate), impedindo que duas operações simultâneas corrompam o saldo de uma conta.
 
-SAVINGS
+---
 
-BUSINESS
+## 🛠️ Tecnologias utilizadas
 
-INVESTMENT
+O projeto foi construído com **Java 25** e **Spring Boot 4**, usando **Spring Security** para proteger os endpoints e **Auth0 JWT** para geração e validação dos tokens. A persistência é feita com **Spring Data JPA** e **Hibernate**, com **PostgreSQL** como banco de dados e **Flyway** gerenciando as migrations automaticamente.
 
-DIGITAL_WALLET
+Para a documentação, usei o **Springdoc OpenAPI** que gera o Swagger UI automaticamente a partir das anotações do código. O ambiente roda inteiro via **Docker Compose**.
 
-🔁 Endpoints
-🔹 Criar Conta
+Os testes foram escritos com **JUnit 5**, **Mockito** e **AssertJ**, cobrindo domínio, services e controllers.
 
-POST /accounts/create
+---
 
-Request
+## 🏗️ Arquitetura
 
-{
-  "holderName": "Lucas Cabral",
-  "cpf": "12345678900",
-  "email": "lucas@email.com",
-  "accountType": "CHECKING"
-}
+O projeto segue uma arquitetura em camadas bem definida. Os controllers recebem as requisições HTTP e delegam para os services, que concentram toda a lógica de negócio. As entidades de domínio (`Account`, `Transaction`) encapsulam suas próprias regras, por exemplo, a validação de saldo e o bloqueio de operações em contas inativas ficam dentro da própria entidade seguindo conceitos do Domain-Driven Design (DDD).
 
-Response – 201
+```
+controller  →  recebe e valida a requisição HTTP
+service     →  aplica as regras de negócio
+repository  →  acessa o banco via JPA
+model       →  entidades com lógica de domínio encapsulada
+dto         →  objetos de entrada e saída da API
+exception   →  exceções customizadas + handler global
+```
 
-{
-  "accountId": "uuid",
-  "balance": 0
-}
-🔹 Depósito
+---
 
-POST /accounts/deposit
+## 🔒 Autenticação
 
-{
-  "accountId": "uuid",
-  "amount": 150.00
-}
-🔹 Saque
+A API usa autenticação **stateless** com JWT. O fluxo é simples:
 
-POST /accounts/withdraw
+1. `POST /auth/register` — cria um usuário
+2. `POST /auth/login` — retorna um token JWT
+3. Inclua o token em todas as requisições seguintes no header `Authorization: Bearer <token>`
 
-{
-  "accountId": "uuid",
-  "amount": 50.00
-}
-🔹 Transferência
+Esses dois endpoints são os únicos que não exigem autenticação. Todo o resto da API é protegido.
 
-POST /accounts/transfer
+---
 
-{
-  "fromId": "uuid",
-  "toId": "uuid",
-  "amount": 100.00
-}
+## 📡 Endpoints disponíveis
 
-Response
+**Autenticação**
+- `POST /auth/register` — registra um novo usuário
+- `POST /auth/login` — faz login e retorna o token
 
-Transfer successful
-⚠️ Tratamento de Erros
+**Contas**
+- `POST /accounts` — cria uma nova conta bancária
+- `GET /accounts` — lista todas as contas
+- `GET /accounts/{id}` — busca conta por ID
+- `GET /accounts/email/{email}` — busca conta por e-mail
+- `GET /accounts/cpf/{cpf}` — busca conta por CPF
+- `PATCH /accounts/{id}` — atualiza dados da conta
+- `DELETE /accounts/{id}` — desativa a conta (soft delete)
+- `GET /accounts/{id}/transactions` — histórico paginado de transações
 
-Formato padrão:
+**Transações**
+- `POST /transactions/deposit` — deposita na conta
+- `POST /transactions/withdraw` — saca da conta
+- `POST /transactions/transfer` — transfere entre duas contas
 
-{
-  "timestamp": "2026-02-22T10:00:00",
-  "message": "mensagem de erro"
-}
-Casos tratados
+---
 
-❌ Conta inexistente → 404 Not Found
+## ⚠️ Erros e validações
 
-❌ Transferência para mesma conta → 400 Bad Request
+Todas as respostas de erro seguem um formato padronizado com timestamp e mensagem. As principais situações tratadas são conta não encontrada (404), saldo insuficiente (400), CPF ou e-mail duplicado (409), conta inativa (403) e conflito de concorrência (409).
 
-❌ Saldo insuficiente
+---
 
-❌ Payload inválido (Bean Validation)
+## 🐳 Rodando com Docker
 
-🧪 Testes
+Com Docker instalado, basta criar um arquivo `.env` na raiz do projeto:
 
-Testes unitários no Service
+```env
+DB_USERNAME=seu_usuario
+DB_PASSWORD=sua_senha
+JWT_SECRET=um_secret_bem_longo_aqui
+```
 
-Testes de Controller com MockMvc
+E subir tudo com um único comando:
 
-Banco mockado (Mockito) — não depende do PostgreSQL real
+```bash
+docker compose up --build
+```
 
-Rodar testes:
+A API estará disponível em `http://localhost:8080` e o Swagger UI em `http://localhost:8080/swagger-ui/index.html`.
 
-# Execute a aplicação
+---
+
+## 💻 Rodando localmente (sem Docker)
+
+Se preferir rodar direto na máquina, você precisa do Java 25, Maven e PostgreSQL instalados. Crie o banco `fluxbank`, configure as variáveis de ambiente `DB_USERNAME`, `DB_PASSWORD` e `JWT_SECRET`, e execute:
+
+```bash
 ./mvnw spring-boot:run
-🛠 Tech StackCore: Java 25, Spring Boot 4.0.3, Spring Data JPADB: PostgreSQL + Flyway (Migrations)Testes: JUnit 5, Mockito, MockMvc🎯 Funcionalidades & RegrasRecursoRegras de NegócioContasCPF/Email únicos, Saldo inicial $0$, Geração de UUID.DepósitoApenas valores positivos.SaqueImpede saldo negativo.TransferênciaOperação transacional (ACID); impede auto-transferência.🔌 API Endpoints (Resumo)AccountsPOST /accounts/create - Cria nova conta.POST /accounts/deposit - Incrementa saldo.POST /accounts/withdraw - Deduz saldo (valida limite).POST /accounts/transfer - Movimentação entre duas contas.Tratamento de Erros: Respostas padronizadas (400, 404, 500) via GlobalExceptionHandler.🧪 Qualidade de CódigoO projeto prioriza a pirâmide de testes para garantir a integridade das transações financeiras:Testes Unitários: Regras de negócio no Service.Testes de Integração: Fluxos de Controller com MockMvc.Isolamento: Mockito para dependências externas.Bash# Rodar todos os testes
+```
+
+O Flyway cria as tabelas automaticamente na primeira execução.
+
+---
+
+## 🧪 Testes
+
+A suite de testes cobre as três camadas principais do projeto — domínio, services e controllers. Para rodar:
+
+```bash
 ./mvnw test
-📈 Roadmap[ ] Documentação com Swagger/OpenAPI[ ] Dockerização (Dockerfile & Compose)[ ] Histórico de transações (Extrato)[ ] Autenticação JWT com Spring SecurityDesenvolvido por Lucas Cabral
-🛢️ Banco de Dados & Flyway
+```
 
-Banco: PostgreSQL
+Os testes de domínio validam as regras de negócio diretamente nas entidades (depósito, saque, desativação). Os testes de service usam Mockito para isolar as dependências e cobrem todos os cenários de sucesso e falha. Os testes de controller usam MockMvc para simular requisições HTTP e verificar status codes e respostas.
 
-Migração automática via Flyway
+---
 
-📂 Local:
+## 👨‍💻 Sobre o autor
 
-src/main/resources/db/migration
-└── V1__create_accounts_table.sql
+Sou **Lucas Cabral**, estudante de Análise e Desenvolvimento de Sistemas no IFPE Paulista. Desenvolvi esse projeto para aprofundar meus conhecimentos em backend Java e construir um portfólio sólido enquanto busco minha primeira oportunidade como desenvolvedor.
 
-Tabela criada:
-
-tb_accounts
-⚙️ Configuração
-application.properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/fluxbank
-spring.datasource.username=${DB_USERNAME:}
-spring.datasource.password=${DB_PASSWORD:}
-Variáveis de ambiente (Windows PowerShell)
-$env:DB_USERNAME="seu_usuario"
-$env:DB_PASSWORD="sua_senha"
-▶️ Executando a aplicação
-./mvnw spring-boot:run
-
-📍 API disponível em:
-
-http://localhost:8080
-🎯 Objetivo do Projeto
-
-Este projeto foi desenvolvido com foco em:
-
-Consolidação de Spring Boot
-
-Aplicação de regras de negócio reais
-
-Escrita de testes automatizados
-
-Preparação para estágio backend Java
-
-👨‍💻 Autor
-
-Lucas Cabral
-Estudante de ADS | Backend Java
-📍 IFPE – Paulista
+[![GitHub](https://img.shields.io/badge/GitHub-Lucasfcz-black?logo=github)](https://github.com/Lucasfcz)

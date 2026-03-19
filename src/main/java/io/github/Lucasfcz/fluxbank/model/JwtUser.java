@@ -22,7 +22,6 @@ public class JwtUser implements UserDetails  {
     @Column(nullable = false)
     private Long id;
 
-    private String username;
     private String email;
     private String password;
 
@@ -33,12 +32,12 @@ public class JwtUser implements UserDetails  {
 
     @Override
     public @Nullable String getPassword() {
-        return "";
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return "";
+        return this.email;
     }
 
     @Override

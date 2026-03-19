@@ -31,3 +31,4 @@ Thumbs.db
 # Crie um application-local.properties para suas senhas reais
 .env
 .env.local
+echo ".env" >> .gitignore

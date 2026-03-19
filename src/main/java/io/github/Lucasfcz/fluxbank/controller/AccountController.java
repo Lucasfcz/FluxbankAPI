@@ -1,5 +1,7 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
+import io.github.Lucasfcz.fluxbank.dto.response.FindCpfResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.response.FindEmailResponseDTO;
 import io.github.Lucasfcz.fluxbank.model.Account;
 import io.github.Lucasfcz.fluxbank.model.Transaction;
 import io.github.Lucasfcz.fluxbank.dto.response.AccountResponseDTO;
@@ -8,6 +10,7 @@ import io.github.Lucasfcz.fluxbank.dto.response.TransactionResponseDTO;
 import io.github.Lucasfcz.fluxbank.dto.request.UpdateAccountRequestDTO;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
 import io.github.Lucasfcz.fluxbank.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,12 +24,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/accounts")
 @RequiredArgsConstructor
-// Exposes account operations as HTTP endpoints.
 public class AccountController {
 
     private final AccountService service;
     private final TransactionService transactionService;
 
+    @Operation(summary = "Create account")
     @PostMapping
     public ResponseEntity<AccountResponseDTO> createAccount(@RequestBody @Valid CreateAccountRequestDTO request) {
         // Delegate account creation to the service layer.
@@ -46,6 +49,8 @@ public class AccountController {
         return ResponseEntity.status(201).body(response);
     }
 
+    //Find account methods(Id, Email and Cpf)
+    @Operation(summary = "Find account by id")
     @GetMapping("/{accountId}")
     public ResponseEntity<AccountResponseDTO> findById(@PathVariable UUID accountId) {
 
@@ -59,14 +64,42 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    //Deactivate an account
+    @Operation(summary = "Find account by email")
+    @GetMapping("/email/{email}")
+    public ResponseEntity<FindEmailResponseDTO> findByEmail(@PathVariable String email) {
+
+        Account account = service.findByEmail(email);
+
+        FindEmailResponseDTO response = new FindEmailResponseDTO(
+                account.getEmail(),
+                account.getBalance()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Find account by cpf")
+    @GetMapping("/cpf/{cpf}")
+    public ResponseEntity<FindCpfResponseDTO> findByCpf(@PathVariable String cpf) {
+
+        Account account = service.findByCpf(cpf);
+
+        FindCpfResponseDTO response = new FindCpfResponseDTO(
+                account.getCpf(),
+                account.getBalance()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Inactive an account")
     @DeleteMapping("/{accountId}")
     public ResponseEntity<Void> deactivateAccount(@PathVariable UUID accountId) {
         service.deactivateAccount(accountId);
         return ResponseEntity.noContent().build();
     }
 
-    //Find all accounts
+    @Operation(summary = "Find all accounts in system")
     @GetMapping
     public ResponseEntity<List<AccountResponseDTO>> findAll(){
         List<Account> accounts = service.findAll();
@@ -81,7 +114,7 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    //List account transactions
+    @Operation(summary = "List transactions(deposits/withdraws/transfers) of account")
     @GetMapping("/{accountId}/transactions")
     public ResponseEntity<Page<TransactionResponseDTO>> getTransactions(
             @PathVariable UUID accountId,
@@ -100,8 +133,8 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    //Upadate account information. Only non-null fields will be updated.
-    @PutMapping("/{accountId}")
+    @Operation(summary = "Update account information")
+    @PatchMapping("/{accountId}")
     public ResponseEntity<AccountResponseDTO> updateAccount(
             @PathVariable UUID accountId,
             @RequestBody @Valid UpdateAccountRequestDTO request) {

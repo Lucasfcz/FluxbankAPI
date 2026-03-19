@@ -5,6 +5,7 @@ import io.github.Lucasfcz.fluxbank.dto.request.AccountRequestDTO;
 import io.github.Lucasfcz.fluxbank.dto.response.AccountResponseDTO;
 import io.github.Lucasfcz.fluxbank.dto.request.TransferRequestDTO;
 import io.github.Lucasfcz.fluxbank.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
+    @Operation(summary = "deposit money in account")
     @PostMapping("/deposit") // POST is used because this endpoint changes server state.
     public ResponseEntity<AccountResponseDTO> deposit(@RequestBody @Valid AccountRequestDTO request) {
         // Execute deposit and return the updated balance.
@@ -32,6 +34,7 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "withdraw money account")
     @PostMapping("/withdraw")
     public ResponseEntity<AccountResponseDTO> withdraw(@RequestBody @Valid AccountRequestDTO request){
         // Execute withdrawal and return the updated balance.
@@ -44,6 +47,7 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "transfer money between two accounts")
     @PostMapping("/transfer") // POST is used because this endpoint changes server state.
     public ResponseEntity<String> transfer(@RequestBody @Valid TransferRequestDTO request) {
 

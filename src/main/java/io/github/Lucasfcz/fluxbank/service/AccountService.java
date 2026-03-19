@@ -24,7 +24,6 @@ public class AccountService {
         if (repository.findByCpf(cpf).isPresent()) {
             throw new ResourceConflictException("CPF is already registered");
         }
-
         if (repository.findByEmail(email).isPresent()) {
             throw new ResourceConflictException("Email is already registered");
         }
@@ -34,14 +33,22 @@ public class AccountService {
         return repository.save(account);
     }
 
+    //Found Account methods
     public Account findById(UUID id) {
-        return repository.findById(id).orElseThrow(() -> new IdNotFoundException("Account Id not found"));
+        return repository.findById(id).orElseThrow(() -> new IdNotFoundException("Account Id not found in system"));
+    }
+
+    public Account findByEmail(String email) {
+        return repository.findByEmail(email).orElseThrow(() -> new IdNotFoundException("Email not found in system"));
+    }
+
+    public Account findByCpf(String cpf){
+        return repository.findByCpf(cpf).orElseThrow(() -> new IdNotFoundException("Cpf not found in system"));
     }
 
     public List <Account> findAll(){
         return repository.findAll();
     }
-
 
     public Account updateAccount(UUID id, String holderName, String email, AccountType accountType) {
         Account account = repository.findById(id).orElseThrow(() -> new IdNotFoundException("Account Id not found"));
@@ -52,11 +59,9 @@ public class AccountService {
             }
             account.changeEmail(email);
         }
-
         if (holderName != null) {
             account.changeHolderName(holderName);
         }
-
         if (accountType != null) {
             account.changeAccountType(accountType);
         }
