@@ -75,7 +75,6 @@ public class TransactionService {
         }
         return transactionRepository.findTransactionsById(
                 accountId,
-                accountId,
                 pageable
         );
     }
