@@ -1,7 +1,7 @@
 # 💳 FluxbankAPI
 
 FluxbankAPI é uma API REST de simulação bancária que desenvolvi para consolidar meus conhecimentos em backend Java. O projeto cobre desde operações financeiras básicas até autenticação com JWT, Docker e testes unitários.
-
+Link: https://fluxbankapi-production.up.railway.app/swagger-ui/index.html
 ---
 
 ## ✨ O que a API faz?
