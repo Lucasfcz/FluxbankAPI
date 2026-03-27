@@ -1,108 +1,142 @@
-# 💳 FluxbankAPI
+# FluxbankAPI
 
-FluxbankAPI é uma API REST de simulação bancária que desenvolvi para consolidar meus conhecimentos em backend Java. O projeto cobre desde operações financeiras básicas até autenticação com JWT, Docker e testes unitários.
-Link: https://fluxbankapi-production.up.railway.app/swagger-ui/index.html
----
+API REST bancária desenvolvida para aprender o Spring boot em aplicações reais. Simula operações financeiras com autenticação JWT, testes unitários e Swagger.
 
-## ✨ O que a API faz?
-
-Você pode criar contas bancárias, fazer depósitos, saques e transferências entre contas, consultar o histórico de transações e gerenciar os dados da conta. Tudo protegido por autenticação JWT.
-
-Além disso, o sistema garante integridade dos dados com controle de concorrência otimista (via `@Version` do Hibernate), impedindo que duas operações simultâneas corrompam o saldo de uma conta.
+🔗 **[Swagger UI (deploy)](https://fluxbankapi-production.up.railway.app/swagger-ui/index.html)**
 
 ---
 
-## 🛠️ Tecnologias utilizadas
+## Tecnologias
 
-O projeto foi construído com **Java 25** e **Spring Boot 4**, usando **Spring Security** para proteger os endpoints e **Auth0 JWT** para geração e validação dos tokens. A persistência é feita com **Spring Data JPA** e **Hibernate**, com **PostgreSQL** como banco de dados e **Flyway** gerenciando as migrations automaticamente.
+![Java](https://img.shields.io/badge/Java_21-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot_3-6DB33F?style=flat&logo=spring&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
 
-Para a documentação, usei o **Springdoc OpenAPI** que gera o Swagger UI automaticamente a partir das anotações do código. O ambiente roda inteiro via **Docker Compose**.
-
-Os testes foram escritos com **JUnit 5**, **Mockito** e **AssertJ**, cobrindo domínio, services e controllers.
+- **Backend:** Spring Boot 4, Spring Web, Spring Security, Spring Data JPA
+- **Banco de dados:** PostgreSQL + Flyway
+- **Autenticação:** JWT (Auth0)
+- **Documentação:** Springdoc OpenAPI (Swagger)
+- **Infraestrutura:** Docker, Docker Compose, Railway
+- **Testes:** JUnit 5, Mockito, AssertJ, MockMvc
 
 ---
 
-## 🏗️ Arquitetura
+## Funcionalidades
 
-O projeto segue uma arquitetura em camadas bem definida. Os controllers recebem as requisições HTTP e delegam para os services, que concentram toda a lógica de negócio. As entidades de domínio (`Account`, `Transaction`) encapsulam suas próprias regras, por exemplo, a validação de saldo e o bloqueio de operações em contas inativas ficam dentro da própria entidade seguindo conceitos do Domain-Driven Design (DDD).
+- Criação e gerenciamento de contas bancárias
+- Depósito, saque e transferência entre contas
+- Histórico paginado de transações
+- Autenticação stateless com JWT
+- Uso do `@Version` para impedir que operações simultâneas corrompam o saldo
+- Contas são desativadas, não deletadas, preservando o histórico
+
+---
+
+## Arquitetura
 
 ```
 controller  →  recebe e valida a requisição HTTP
-service     →  aplica as regras de negócio
+service     →  regras de negócio
 repository  →  acessa o banco via JPA
 model       →  entidades com lógica de domínio encapsulada
-dto         →  objetos de entrada e saída da API
+dto         →  objetos de entrada e saída
 exception   →  exceções customizadas + handler global
 ```
 
 ---
 
-## 🔒 Autenticação
+## Autenticação
 
-A API usa autenticação **stateless** com JWT. O fluxo é simples:
+A API usa JWT stateless. Apenas `/auth/register` e `/auth/login` são públicos.
 
-1. `POST /auth/register` — cria um usuário
-2. `POST /auth/login` — retorna um token JWT
-3. Inclua o token em todas as requisições seguintes no header `Authorization: Bearer <token>`
+```
+POST /auth/register   → cria um usuário
+POST /auth/login      → retorna o token JWT
+```
 
-Esses dois endpoints são os únicos que não exigem autenticação. Todo o resto da API é protegido.
-
----
-
-## 📡 Endpoints disponíveis
-
-**Autenticação**
-- `POST /auth/register` — registra um novo usuário
-- `POST /auth/login` — faz login e retorna o token
-
-**Contas**
-- `POST /accounts` — cria uma nova conta bancária
-- `GET /accounts` — lista todas as contas
-- `GET /accounts/{id}` — busca conta por ID
-- `GET /accounts/email/{email}` — busca conta por e-mail
-- `GET /accounts/cpf/{cpf}` — busca conta por CPF
-- `PATCH /accounts/{id}` — atualiza dados da conta
-- `DELETE /accounts/{id}` — desativa a conta (soft delete)
-- `GET /accounts/{id}/transactions` — histórico paginado de transações
-
-**Transações**
-- `POST /transactions/deposit` — deposita na conta
-- `POST /transactions/withdraw` — saca da conta
-- `POST /transactions/transfer` — transfere entre duas contas
+Inclua o token nas demais requisições:
+```
+Authorization: Bearer <token>
+```
 
 ---
 
-## ⚠️ Erros e validações
+## Endpoints
 
-Todas as respostas de erro seguem um formato padronizado com timestamp e mensagem. As principais situações tratadas são conta não encontrada (404), saldo insuficiente (400), CPF ou e-mail duplicado (409), conta inativa (403) e conflito de concorrência (409).
+<details>
+<summary><strong>Contas</strong></summary>
+
+```
+POST   /accounts
+GET    /accounts
+GET    /accounts/{id}
+GET    /accounts/email/{email}
+GET    /accounts/cpf/{cpf}
+PATCH  /accounts/{id}
+DELETE /accounts/{id}
+GET    /accounts/{id}/transactions
+```
+</details>
+
+<details>
+<summary><strong>Transações</strong></summary>
+
+```
+POST /transactions/deposit
+POST /transactions/withdraw
+POST /transactions/transfer
+```
+</details>
 
 ---
 
-## 🐳 Rodando com Docker
+## Erros
 
-Com Docker instalado, basta criar um arquivo `.env` na raiz do projeto:
+Todas as respostas de erro seguem o mesmo formato:
+
+```json
+{
+  "timestamp": "2024-01-01T12:00:00",
+  "message": "descrição do erro"
+}
+```
+
+| Situação | Status |
+|---|---|
+| Conta não encontrada | 404 |
+| Saldo insuficiente | 400 |
+| CPF ou e-mail duplicado | 409 |
+| Conta inativa | 403 |
+| Conflito de concorrência | 409 |
+
+---
+
+## Rodando com Docker
+
+Crie um `.env` na raiz:
 
 ```env
 DB_USERNAME=seu_usuario
 DB_PASSWORD=sua_senha
-JWT_SECRET=um_secret_bem_longo_aqui
+JWT_SECRET=um_secret_longo_aqui
 ```
-
-E subir tudo com um único comando:
 
 ```bash
 docker compose up --build
 ```
 
-A API estará disponível em `http://localhost:8080` e o Swagger UI em `http://localhost:8080/swagger-ui/index.html`.
+Acesse em `http://localhost:8080/swagger-ui/index.html`
 
 ---
 
-## 💻 Rodando localmente (sem Docker)
+## Rodando localmente
 
-Se preferir rodar direto na máquina, você precisa do Java 25, Maven e PostgreSQL instalados. Crie o banco `fluxbank`, configure as variáveis de ambiente `DB_USERNAME`, `DB_PASSWORD` e `JWT_SECRET`, e execute:
+Pré-requisitos: Java 21, Maven e PostgreSQL.
 
 ```bash
+# Configure as variáveis DB_USERNAME, DB_PASSWORD e JWT_SECRET
 ./mvnw spring-boot:run
 ```
 
@@ -110,20 +144,23 @@ O Flyway cria as tabelas automaticamente na primeira execução.
 
 ---
 
-## 🧪 Testes
-
-A suite de testes cobre as três camadas principais do projeto — domínio, services e controllers. Para rodar:
+## Testes
 
 ```bash
 ./mvnw test
 ```
 
-Os testes de domínio validam as regras de negócio diretamente nas entidades (depósito, saque, desativação). Os testes de service usam Mockito para isolar as dependências e cobrem todos os cenários de sucesso e falha. Os testes de controller usam MockMvc para simular requisições HTTP e verificar status codes e respostas.
+Cobertura em três camadas:
+
+- **Domínio** — regras de negócio nas entidades
+- **Service** — todos os cenários de sucesso e falha com Mockito
+- **Controller** — requisições HTTP simuladas com MockMvc
 
 ---
 
-## 👨‍💻 Sobre o autor
+## Autor
 
-Sou **Lucas Cabral**, estudante de Análise e Desenvolvimento de Sistemas no IFPE Paulista. Desenvolvi esse projeto para aprofundar meus conhecimentos em backend Java e construir um portfólio sólido enquanto busco minha primeira oportunidade como desenvolvedor.
+Feito por **[Lucas Cabral](https://github.com/Lucasfcz)** — estudante de ADS no IFPE Paulista, em busca da primeira oportunidade como desenvolvedor backend.
 
-[![GitHub](https://img.shields.io/badge/GitHub-Lucasfcz-black?logo=github)](https://github.com/Lucasfcz)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/lucas-cabral-2432633a6)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/Lucasfcz)
