@@ -27,8 +27,7 @@ buildNumber.properties
 Thumbs.db
 
 ### CONFIGURAÇÕES LOCAIS (IMPORTANTE) ###
-# Não ignore o arquivo principal, mas sim o que tem suas senhas
-# Crie um application-local.properties para suas senhas reais
+# Never commit files with sensitive credentials
 .env
 .env.local
-echo ".env" >> .gitignore
+.env.*.local

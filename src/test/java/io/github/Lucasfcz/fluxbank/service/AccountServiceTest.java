@@ -4,6 +4,7 @@ import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
 import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.JwtUser;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,26 +32,31 @@ class AccountServiceTest {
     @Mock
     private AccountRepository repository;
 
+    @Mock
+    private AuthService authService;
+
     @InjectMocks
     private AccountService service;
 
     private Account account;
+    private JwtUser owner;
 
     @BeforeEach
     void setUp() {
-        account = new Account("Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
+        owner = new JwtUser("lucas@email.com", "encodedPassword123");
+        owner.setId(1L);
+        account = new Account(owner, "Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
         ReflectionTestUtils.setField(account, "id", UUID.randomUUID());
     }
 
-    // ========================= CREATE =========================
-
-    @Nested
-    @DisplayName("createAccount()")
-    class CreateAccount {
+     @Nested
+     @DisplayName("createAccount()")
+     class CreateAccount {
 
         @Test
         @DisplayName("Should create account successfully when CPF and email are unique")
         void shouldCreateAccount_WhenCpfAndEmailAreUnique() {
+            when(authService.getAuthenticatedUser()).thenReturn(owner);
             when(repository.findByCpf("12345678900")).thenReturn(Optional.empty());
             when(repository.findByEmail("lucas@email.com")).thenReturn(Optional.empty());
             when(repository.save(any(Account.class))).thenAnswer(i -> i.getArgument(0));
@@ -69,6 +75,7 @@ class AccountServiceTest {
         @Test
         @DisplayName("Should throw ResourceConflictException when CPF already exists")
         void shouldThrow_WhenCpfAlreadyExists() {
+            when(authService.getAuthenticatedUser()).thenReturn(owner);
             when(repository.findByCpf("12345678900")).thenReturn(Optional.of(account));
 
             assertThatThrownBy(() -> service.createAccount(
@@ -82,6 +89,7 @@ class AccountServiceTest {
         @Test
         @DisplayName("Should throw ResourceConflictException when email already exists")
         void shouldThrow_WhenEmailAlreadyExists() {
+            when(authService.getAuthenticatedUser()).thenReturn(owner);
             when(repository.findByCpf("12345678900")).thenReturn(Optional.empty());
             when(repository.findByEmail("lucas@email.com")).thenReturn(Optional.of(account));
 
@@ -92,13 +100,11 @@ class AccountServiceTest {
 
             verify(repository, never()).save(any());
         }
-    }
+     }
 
-    // ========================= FIND =========================
-
-    @Nested
-    @DisplayName("find methods")
-    class FindMethods {
+     @Nested
+     @DisplayName("find methods")
+     class FindMethods {
 
         @Test
         @DisplayName("Should return account when findById finds a match")
@@ -164,20 +170,20 @@ class AccountServiceTest {
         @Test
         @DisplayName("Should return all accounts")
         void shouldReturnAllAccounts() {
-            Account other = new Account("Maria", "99988877766", "maria@email.com", AccountType.SAVINGS);
+            JwtUser owner2 = new JwtUser("maria@email.com", "encodedPassword456");
+            owner2.setId(2L);
+            Account other = new Account(owner2, "Maria", "99988877766", "maria@email.com", AccountType.SAVINGS);
             when(repository.findAll()).thenReturn(List.of(account, other));
 
             List<Account> result = service.findAll();
 
             assertThat(result).hasSize(2).contains(account, other);
         }
-    }
+     }
 
-    // ========================= UPDATE =========================
-
-    @Nested
-    @DisplayName("updateAccount()")
-    class UpdateAccount {
+     @Nested
+     @DisplayName("updateAccount()")
+     class UpdateAccount {
 
         @Test
         @DisplayName("Should update holder name successfully")
@@ -205,7 +211,9 @@ class AccountServiceTest {
         @Test
         @DisplayName("Should throw ResourceConflictException when new email is already in use")
         void shouldThrow_WhenNewEmailAlreadyInUse() {
-            Account other = new Account("Maria", "99988877766", "ocupado@email.com", AccountType.SAVINGS);
+            JwtUser owner2 = new JwtUser("maria@email.com", "encodedPassword456");
+            owner2.setId(2L);
+            Account other = new Account(owner2, "Maria", "99988877766", "ocupado@email.com", AccountType.SAVINGS);
             when(repository.findById(account.getId())).thenReturn(Optional.of(account));
             when(repository.findByEmail("ocupado@email.com")).thenReturn(Optional.of(other));
 

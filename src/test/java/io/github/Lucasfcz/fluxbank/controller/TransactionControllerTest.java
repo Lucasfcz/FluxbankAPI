@@ -1,8 +1,11 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
+import io.github.Lucasfcz.fluxbank.dto.response.AccountResponseDTO;
 import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.*;
+import io.github.Lucasfcz.fluxbank.mapper.AccountMapper;
 import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.JwtUser;
 import io.github.Lucasfcz.fluxbank.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,11 +15,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -26,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("TransactionController Tests")
 class TransactionControllerTest {
 
@@ -33,6 +41,9 @@ class TransactionControllerTest {
 
     @Mock
     private TransactionService transactionService;
+
+    @Mock
+    private AccountMapper accountMapper;
 
     @InjectMocks
     private TransactionController controller;
@@ -51,9 +62,20 @@ class TransactionControllerTest {
                 .setValidator(validator)
                 .build();
 
-        account = new Account("Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
+        JwtUser owner = new JwtUser("lucas@email.com", "encodedPassword123");
+        owner.setId(1L);
+        account = new Account(owner, "Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
         accountId = UUID.randomUUID();
         ReflectionTestUtils.setField(account, "id", accountId);
+
+        // Setup mapper mock to return DTOs dynamically based on account parameter
+        when(accountMapper.toAccountResponseDTO(any(Account.class))).thenAnswer(invocation -> {
+            Account acc = invocation.getArgument(0);
+            return new AccountResponseDTO(
+                    acc.getId(), acc.getHolderName(), acc.getEmail(), acc.getAccountType(),
+                    acc.getBalance(), acc.isActive(), acc.getCreatedAt()
+            );
+        });
     }
 
     // ========================= DEPOSIT =========================
@@ -63,6 +85,7 @@ class TransactionControllerTest {
     class Deposit {
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 200 with updated balance when deposit succeeds")
         void shouldReturn200_WhenDepositSucceeds() throws Exception {
             account.deposit(BigDecimal.valueOf(100));
@@ -84,6 +107,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 404 when account does not exist")
         void shouldReturn404_WhenAccountNotFound() throws Exception {
             when(transactionService.deposit(accountId, BigDecimal.valueOf(100)))
@@ -102,6 +126,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 403 when account is inactive")
         void shouldReturn403_WhenAccountIsInactive() throws Exception {
             when(transactionService.deposit(accountId, BigDecimal.valueOf(100)))
@@ -120,6 +145,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 400 when payload is invalid")
         void shouldReturn400_WhenPayloadIsInvalid() throws Exception {
             mockMvc.perform(post("/transactions/deposit")
@@ -141,6 +167,7 @@ class TransactionControllerTest {
     class Withdraw {
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 200 with updated balance when withdrawal succeeds")
         void shouldReturn200_WhenWithdrawalSucceeds() throws Exception {
             account.deposit(BigDecimal.valueOf(500));
@@ -161,6 +188,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 400 when balance is insufficient")
         void shouldReturn400_WhenBalanceIsInsufficient() throws Exception {
             when(transactionService.withdraw(accountId, BigDecimal.valueOf(9999)))
@@ -179,6 +207,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 403 when account is inactive")
         void shouldReturn403_WhenAccountIsInactive() throws Exception {
             when(transactionService.withdraw(accountId, BigDecimal.valueOf(100)))
@@ -222,6 +251,7 @@ class TransactionControllerTest {
     class Transfer {
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 200 with success message when transfer succeeds")
         void shouldReturn200_WhenTransferSucceeds() throws Exception {
             UUID fromId = UUID.randomUUID();
@@ -243,6 +273,7 @@ class TransactionControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 400 when transfer is to same account")
         void shouldReturn400_WhenTransferToSameAccount() throws Exception {
             UUID sameId = UUID.randomUUID();

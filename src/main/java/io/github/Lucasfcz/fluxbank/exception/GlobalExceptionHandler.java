@@ -68,6 +68,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    // Maps null owner to HTTP 400 when account owner is not provided.
+    @ExceptionHandler(NullOwnerException.class)
+    public ResponseEntity<ErrorResponseDTO> handleNullOwner(NullOwnerException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
     public ResponseEntity<ErrorResponseDTO> handleOptimisticLocking(Exception ex) {
 

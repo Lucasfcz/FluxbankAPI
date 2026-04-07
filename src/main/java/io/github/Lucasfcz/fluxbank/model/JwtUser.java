@@ -25,6 +25,9 @@ public class JwtUser implements UserDetails  {
     private String email;
     private String password;
 
+    @OneToMany(mappedBy = "owner")
+    private List<Account> accounts;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
@@ -32,31 +35,42 @@ public class JwtUser implements UserDetails  {
 
     @Override
     public @Nullable String getPassword() {
+
         return this.password;
     }
 
     @Override
     public String getUsername() {
+
         return this.email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
+
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
+
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
+
         return true;
     }
 
     @Override
     public boolean isEnabled(){
+
         return true;
+    }
+
+    public JwtUser(String email, String password) {
+        this.email = email;
+        this.password = password;
     }
 }

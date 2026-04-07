@@ -6,6 +6,7 @@ import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.InsufficientBalanceException;
 import io.github.Lucasfcz.fluxbank.exception.SameAccountException;
 import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.JwtUser;
 import io.github.Lucasfcz.fluxbank.model.Transaction;
 import io.github.Lucasfcz.fluxbank.repository.AccountRepository;
 import io.github.Lucasfcz.fluxbank.repository.TransactionRepository;
@@ -46,8 +47,13 @@ class TransactionServiceTest {
 
     @BeforeEach
     void setUp() {
-        sourceAccount = new Account("Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
-        destinationAccount = new Account("Maria Souza", "99988877766", "maria@email.com", AccountType.SAVINGS);
+        JwtUser owner1 = new JwtUser("lucas@email.com", "encodedPassword123");
+        owner1.setId(1L);
+        JwtUser owner2 = new JwtUser("maria@email.com", "encodedPassword456");
+        owner2.setId(2L);
+
+        sourceAccount = new Account(owner1, "Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
+        destinationAccount = new Account(owner2, "Maria Souza", "99988877766", "maria@email.com", AccountType.SAVINGS);
 
         ReflectionTestUtils.setField(sourceAccount, "id", UUID.randomUUID());
         ReflectionTestUtils.setField(destinationAccount, "id", UUID.randomUUID());

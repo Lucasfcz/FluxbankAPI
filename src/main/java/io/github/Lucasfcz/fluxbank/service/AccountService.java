@@ -1,6 +1,7 @@
 package io.github.Lucasfcz.fluxbank.service;
 
 import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.JwtUser;
 import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.IdNotFoundException;
 import io.github.Lucasfcz.fluxbank.exception.ResourceConflictException;
@@ -18,22 +19,27 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository repository;
+    private final AuthService authService;
 
     @Transactional
     public Account createAccount(String holderName, String cpf, String email, AccountType accountType) {
+
+        JwtUser owner = authService.getAuthenticatedUser();
+
         if (repository.findByCpf(cpf).isPresent()) {
             throw new ResourceConflictException("CPF is already registered");
         }
+
         if (repository.findByEmail(email).isPresent()) {
             throw new ResourceConflictException("Email is already registered");
         }
 
-        Account account = new Account(holderName, cpf, email, accountType);
+        Account account = new Account(owner, holderName, cpf, email, accountType);
 
         return repository.save(account);
     }
 
-    //Found Account methods
+    //Find Account methods
     public Account findById(UUID id) {
         return repository.findById(id).orElseThrow(() -> new IdNotFoundException("Account Id not found in system"));
     }

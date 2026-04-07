@@ -18,17 +18,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AccountTest {
 
     private Account account;
+    private JwtUser owner;
 
     @BeforeEach
     void setUp() {
-        account = new Account("Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
+        owner = new JwtUser("lucas@email.com", "encodedPassword123");
+        owner.setId(1L);
+        account = new Account(owner, "Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
     }
 
-    // ========================= DEPOSIT =========================
-
-    @Nested
-    @DisplayName("deposit()")
-    class Deposit {
+     @Nested
+     @DisplayName("deposit()")
+     class Deposit {
 
         @Test
         @DisplayName("Should increase balance when amount is valid")
@@ -77,13 +78,11 @@ class AccountTest {
                     .isInstanceOf(AccountInactiveException.class)
                     .hasMessage("Account is inactive");
         }
-    }
+     }
 
-    // ========================= WITHDRAW =========================
-
-    @Nested
-    @DisplayName("withdraw()")
-    class Withdraw {
+     @Nested
+     @DisplayName("withdraw()")
+     class Withdraw {
 
         @Test
         @DisplayName("Should decrease balance when balance is sufficient")
@@ -137,13 +136,11 @@ class AccountTest {
                     .isInstanceOf(AccountInactiveException.class)
                     .hasMessage("Account is inactive");
         }
-    }
+     }
 
-    // ========================= DEACTIVATE =========================
-
-    @Nested
-    @DisplayName("deactivate()")
-    class Deactivate {
+     @Nested
+     @DisplayName("deactivate()")
+     class Deactivate {
 
         @Test
         @DisplayName("Should set account as inactive")
@@ -160,13 +157,11 @@ class AccountTest {
             account.deactivate();
             assertThat(account.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(200));
         }
-    }
+     }
 
-    // ========================= CHANGE METHODS =========================
-
-    @Nested
-    @DisplayName("change methods")
-    class ChangeMethods {
+     @Nested
+     @DisplayName("change methods")
+     class ChangeMethods {
 
         @Test
         @DisplayName("Should update email")

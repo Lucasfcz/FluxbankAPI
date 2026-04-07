@@ -1,8 +1,15 @@
 package io.github.Lucasfcz.fluxbank.controller;
 
+import io.github.Lucasfcz.fluxbank.dto.response.AccountResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.response.FindCpfResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.response.FindEmailResponseDTO;
+import io.github.Lucasfcz.fluxbank.dto.response.TransactionResponseDTO;
 import io.github.Lucasfcz.fluxbank.enums.AccountType;
 import io.github.Lucasfcz.fluxbank.exception.*;
+import io.github.Lucasfcz.fluxbank.mapper.AccountMapper;
+import io.github.Lucasfcz.fluxbank.mapper.TransactionMapper;
 import io.github.Lucasfcz.fluxbank.model.Account;
+import io.github.Lucasfcz.fluxbank.model.JwtUser;
 import io.github.Lucasfcz.fluxbank.service.AccountService;
 import io.github.Lucasfcz.fluxbank.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -40,6 +48,12 @@ class AccountControllerTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    private AccountMapper accountMapper;
+
+    @Mock
+    private TransactionMapper transactionMapper;
+
     @InjectMocks
     private AccountController controller;
 
@@ -57,9 +71,28 @@ class AccountControllerTest {
                 .setValidator(validator)
                 .build();
 
-        account = new Account("Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
+        JwtUser owner = new JwtUser("lucas@email.com", "encodedPassword123");
+        owner.setId(1L);
+        account = new Account(owner, "Lucas Cabral", "12345678900", "lucas@email.com", AccountType.CHECKING);
         accountId = UUID.randomUUID();
         ReflectionTestUtils.setField(account, "id", accountId);
+
+        // Setup mapper mocks to return DTOs dynamically based on account parameter
+        when(accountMapper.toAccountResponseDTO(any(Account.class))).thenAnswer(invocation -> {
+            Account acc = invocation.getArgument(0);
+            return new AccountResponseDTO(
+                    acc.getId(), acc.getHolderName(), acc.getEmail(), acc.getAccountType(),
+                    acc.getBalance(), acc.isActive(), acc.getCreatedAt()
+            );
+        });
+        when(accountMapper.toFindEmailResponseDTO(any(Account.class))).thenAnswer(invocation -> {
+            Account acc = invocation.getArgument(0);
+            return new FindEmailResponseDTO(acc.getEmail(), acc.getBalance());
+        });
+        when(accountMapper.toFindCpfResponseDTO(any(Account.class))).thenAnswer(invocation -> {
+            Account acc = invocation.getArgument(0);
+            return new FindCpfResponseDTO(acc.getCpf(), acc.getBalance());
+        });
     }
 
     // ========================= CREATE =========================
@@ -69,6 +102,7 @@ class AccountControllerTest {
     class CreateAccount {
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 201 with account data when creation succeeds")
         void shouldReturn201_WhenCreationSucceeds() throws Exception {
             when(service.createAccount(any(), any(), any(), any())).thenReturn(account);
@@ -107,6 +141,7 @@ class AccountControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 409 when CPF already exists")
         void shouldReturn409_WhenCpfAlreadyExists() throws Exception {
             when(service.createAccount(any(), any(), any(), any()))
@@ -127,6 +162,7 @@ class AccountControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "lucas@email.com")
         @DisplayName("Should return 409 when email already exists")
         void shouldReturn409_WhenEmailAlreadyExists() throws Exception {
             when(service.createAccount(any(), any(), any(), any()))
@@ -184,7 +220,9 @@ class AccountControllerTest {
         @Test
         @DisplayName("Should return 200 with list of accounts")
         void shouldReturn200_WithListOfAccounts() throws Exception {
-            Account other = new Account("Maria", "99988877766", "maria@email.com", AccountType.SAVINGS);
+            JwtUser owner2 = new JwtUser("maria@email.com", "encodedPassword456");
+            owner2.setId(2L);
+            Account other = new Account(owner2, "Maria", "99988877766", "maria@email.com", AccountType.SAVINGS);
             ReflectionTestUtils.setField(other, "id", UUID.randomUUID());
 
             when(service.findAll()).thenReturn(List.of(account, other));

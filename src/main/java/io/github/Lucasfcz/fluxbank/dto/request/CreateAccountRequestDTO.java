@@ -6,19 +6,24 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "Account creation")
+@Schema(description = "Bank account creation request")
 public record CreateAccountRequestDTO(
-        @Schema(description = "name of the holder of account")
-        @NotBlank
+        @Schema(description = "Name of the account holder", example = "John Doe")
+        @NotBlank(message = "Holder name is required")
         String holderName,
-        @Schema(description = "holder account cpf")// Legal name of the account holder.
-        @NotBlank
-        String cpf, // Brazilian individual taxpa// yer registry id.
-        @Schema(description = "email associated an account")
-        @Email
-        @NotBlank
-        String email, // Unique contact email for the account.
-        @Schema(description = "type of account(CHECKING,SAVINGS,BUSINESS,INVESTMENT,DIGITAL_WALLET")
-        @NotNull
-        AccountType accountType // Product type selected for the account.
+
+        @Schema(description = "11 digits, must be unique", example = "12345678900")
+        @NotBlank(message = "CPF is required")
+        String cpf,
+
+        @Schema(description = "Email address - must be unique and valid", example = "john@example.com")
+        @Email(message = "Email must be valid")
+        @NotBlank(message = "Email is required")
+        String email,
+
+        @Schema(description = "Account type (CHECKING, SAVINGS, BUSINESS, INVESTMENT, DIGITAL_WALLET)", example = "CHECKING")
+        @NotNull(message = "Account type is required")
+        AccountType accountType
 ) {}
+
+
