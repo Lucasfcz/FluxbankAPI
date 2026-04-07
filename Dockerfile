@@ -9,7 +9,7 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
-RUN useradd -m -u 1000 appuser
+RUN adduser -m -u 1000 appuser
 
 WORKDIR /app
 
