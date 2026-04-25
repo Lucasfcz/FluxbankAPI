@@ -33,7 +33,6 @@ public class AccountService {
         if (repository.findByEmail(email).isPresent()) {
             throw new ResourceConflictException("Email is already registered");
         }
-
         Account account = new Account(owner, holderName, cpf, email, accountType);
 
         return repository.save(account);
